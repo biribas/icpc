@@ -4,13 +4,14 @@ using namespace std;
 
 typedef unsigned long long ull;
 
+#define SETUP ios::sync_with_stdio(false); cin.tie(NULL); cout.tie(0);
+
 #define MAX_VALUE 1000000
 #define MAX_FOOD 100000
 #define MOD 1000000007
 
 int main(void) {
-  ios::sync_with_stdio(false);
-  cin.tie(NULL);
+  SETUP
 
   // spf[n] = smallest prime factor of n
   vector<int> spf(MAX_VALUE + 1, 1);
@@ -49,36 +50,33 @@ int main(void) {
     }
   }
 
-  // Mobius function
-  // mobius[n] = 1, if n = 1
-  // mobius[n] = 0, if n has a squared prime factor
-  // mobius[n] = (-1)^k, if n is a product of k distinct primes factors
-  vector<int> mobius(MAX_VALUE, 1);
-  for (ull n = 2; n <= MAX_VALUE; n++) {
-    int quotient = n / spf[n];
-    if (spf[n] == spf[quotient]) {
-      mobius[n] = 0;
-    } else {
-      mobius[n] = -1 * mobius[quotient];
-    }
-  }
-
-  // forbidden_foods[n] = Number of foods forbidden for an allergy n
-  vector<int> forbidden_foods(MAX_VALUE + 1, 0);
-
-  // Inclusion-Exclusion Principle
-  for (int i = 2; i <= MAX_VALUE; i++) {
-    for (int j = i; j <= MAX_VALUE; j += i) {
-      forbidden_foods[j] += -1 * mobius[i] * freq[i];
-    }
-  }
-
   int Q, X;
   cin >> Q;
 
   while (Q--) {
     cin >> X;
-    cout << powers_of_two[N - forbidden_foods[X]] << endl;
+    vector<int> prime_factors;
+    while (X > 1) {
+      int p = spf[X];
+      while (X % p == 0) X /= p;
+      prime_factors.push_back(p);
+    }
+
+    int forbidden_foods = 0;
+
+    // Inclusion-Exclusion Principle
+    for (int i = 1; i < 1 << prime_factors.size(); i++) {   // For each subset of prime factors
+      int cur_subset = 1, subset_size = 0;
+      for (int j = 0; j < prime_factors.size(); j++) {      // Select prime factors for the subset
+        if (i & (1 << j)) {
+          cur_subset *= prime_factors[j];
+          subset_size++;
+        }
+      }
+      forbidden_foods += freq[cur_subset] * (subset_size & 1 ? 1 : -1);
+    }
+
+    cout << powers_of_two[N - forbidden_foods] << endl;
   }
 
   return 0;
